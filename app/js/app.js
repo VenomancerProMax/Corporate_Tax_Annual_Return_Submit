@@ -13,7 +13,6 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     const applicationData = appResponse.data[0];
     app_id = applicationData.id;
     account_id = applicationData.Account_Name.id;
-
     console.log("ACCOUNT ID: ", account_id);
   } catch (err) {
     console.error(err);
@@ -21,7 +20,7 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
 });
 
 function clearErrors() {
-  document.querySelectorAll(".error-message").forEach(span => {
+  document.querySelectorAll(".error-message").forEach((span) => {
     span.textContent = "";
   });
 }
@@ -47,6 +46,7 @@ function hideUploadBuffer() {
   if (buffer) buffer.classList.add("hidden");
 }
 
+// Returns YYYY-MM-DD of last day + 1 year 9 months
 function getCTReturnDueDate(taxPeriodCT, financialYearEnding) {
   const parts = (taxPeriodCT || "").split(" - ");
   if (parts.length !== 2) return null;
@@ -55,26 +55,52 @@ function getCTReturnDueDate(taxPeriodCT, financialYearEnding) {
   const year = parseInt(financialYearEnding, 10);
   if (isNaN(year)) return null;
 
-  // Last day of end month
   const monthIndex = new Date(`${endMonth} 1, ${year}`).getMonth();
   const lastDayDate = new Date(year, monthIndex + 1, 0);
 
-  // Add 1 year and 9 months
   lastDayDate.setFullYear(lastDayDate.getFullYear() + 1);
   lastDayDate.setMonth(lastDayDate.getMonth() + 9);
 
-  // Return in Zoho date format (YYYY-MM-DD)
   return lastDayDate.toISOString().split("T")[0];
 }
 
+function validateFinancialYear(fy) {
+  if (!/^\d{4}$/.test(fy)) {
+    return "Enter a four-digit year (e.g., 2025).";
+  }
+  const year = parseInt(fy, 10);
+  if (year < 2025 || year > 2050) {
+    return "Year must be between 2025 and 2050.";
+  }
+  return "";
+}
 
+const fyInput = document.getElementById("financial-year");
+if (fyInput) {
+  fyInput.addEventListener("input", () => {
+    fyInput.value = fyInput.value.replace(/\D/g, "").slice(0, 4);
+    const err = validateFinancialYear(fyInput.value);
+    if (!err) {
+      const span = document.getElementById("error-financial-year");
+      if (span) span.textContent = "";
+    }
+  });
+  fyInput.addEventListener("blur", () => {
+    const val = fyInput.value;
+    if (/^\d{4}$/.test(val)) {
+      let year = parseInt(val, 10);
+      if (year < 2025) year = 2025;
+      if (year > 2050) year = 2050;
+      fyInput.value = String(year);
+    }
+  });
+}
 
 async function cacheFileOnChange(event) {
   clearErrors();
 
   const fileInput = event.target;
   const file = fileInput?.files[0];
-
   if (!file) return;
 
   if (file.size > 20 * 1024 * 1024) {
@@ -119,114 +145,116 @@ async function uploadFileToCRM() {
   });
 }
 
-
 async function update_record(event = null) {
-    if (event) event.preventDefault();
+  if (event) event.preventDefault();
 
-    clearErrors();
+  clearErrors();
 
-    let hasError = false;
+  let hasError = false;
+  const submitBtn = document.getElementById("submit_button_id");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+  }
 
-    const submitBtn = document.getElementById("submit_button_id");
+  const referenceNo = document.getElementById("reference-number")?.value;
+  const taxablePerson = document.getElementById("name-of-taxable-person")?.value;
+  const taxRegNo = document.getElementById("tax-registration-number")?.value;
+  const taxPeriodCt = document.getElementById("tax-period-ct")?.value;
+  const financialYear = document.getElementById("financial-year")?.value;
+  const taxPaid = document.getElementById("tax-paid")?.value;
+
+  if (!referenceNo) {
+    showError("reference-number", "Reference Number is required.");
+    hasError = true;
+  }
+
+  if (!taxablePerson) {
+    showError("name-of-taxable-person", "Legal Name of Taxable Person is required.");
+    hasError = true;
+  }
+
+  if (!taxRegNo) {
+    showError("tax-registration-number", "Tax Registration Number is required.");
+    hasError = true;
+  }
+
+  if (!taxPeriodCt) {
+    showError("tax-period-ct", "Tax Period CT is required.");
+    hasError = true;
+  }
+
+  if (!financialYear) {
+    showError("financial-year", "Financial Year (Ending) is required.");
+    hasError = true;
+  } else {
+    const fyErr = validateFinancialYear(financialYear);
+    if (fyErr) {
+      showError("financial-year", fyErr);
+      hasError = true;
+    }
+  }
+
+  if (!taxPaid) {
+    showError("tax-paid", "Tax Paid is required.");
+    hasError = true;
+  }
+
+  if (!cachedFile || !cachedBase64) {
+    showError("corporate-tax-return", "Please upload the Corporate Tax Return.");
+    hasError = true;
+  }
+
+  if (hasError) {
     if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Submitting...";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit";
     }
+    return;
+  }
 
-    const referenceNo = document.getElementById("reference-number")?.value;
-    const taxablePerson = document.getElementById("name-of-taxable-person")?.value;
-    const taxRegNo = document.getElementById("tax-registration-number")?.value;
-    const taxPeriodCt = document.getElementById("tax-period-ct")?.value;
-    const financialYear = document.getElementById("financial-year")?.value;
-    const taxPaid = document.getElementById("tax-paid")?.value;
+  const today = new Date();
+  const isoDate = today.toISOString().split("T")[0];
 
-    if (!referenceNo) {
-        showError("reference-number", "Reference Number is required.");
-        hasError = true;
+  try {
+    await ZOHO.CRM.API.updateRecord({
+      Entity: "Applications1",
+      APIData: {
+        id: app_id,
+        Reference_Number: referenceNo,
+        Legal_Name_of_Taxable_Person: taxablePerson,
+        Tax_Registration_Number_TRN: taxRegNo,
+        Tax_Period_CT: taxPeriodCt,
+        Financial_Year_Ending: financialYear,
+        Tax_Paid: taxPaid,
+        Application_Issuance_Date: isoDate,
+        Application_Date: isoDate,
+      },
+    });
+
+    const ctReturnDd = getCTReturnDueDate(taxPeriodCt, financialYear);
+    console.log("Computed CT_Return_DD:", ctReturnDd);
+
+    await ZOHO.CRM.API.updateRecord({
+      Entity: "Accounts",
+      APIData: {
+        id: account_id,
+        CT_Status: "Active",
+        CT_Return_DD: ctReturnDd,
+      },
+    });
+
+    await uploadFileToCRM();
+    await ZOHO.CRM.BLUEPRINT.proceed();
+    await ZOHO.CRM.UI.Popup.closeReload();
+  } catch (error) {
+    console.error("Error on final submit:", error);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit";
     }
-
-    if (!taxablePerson) {
-        showError("name-of-taxable-person", "Legal Name of Taxable Person is required.");
-        hasError = true;
-    }
-
-    if (!taxRegNo) {
-        showError("tax-registration-number", "Tax Registration Number is required.");
-        hasError = true;
-    }
-
-    if (!taxPeriodCt) {
-        showError("tax-period-ct", "Tax Period CT is required.");
-        hasError = true;
-    }
-
-    if (!financialYear) {
-        showError("financial-year", "Financial Year (Ending) is required.");
-        hasError = true;
-    }
-
-    if (!taxPaid) {
-        showError("tax-paid", "Tax Paid is required.");
-        hasError = true;
-    }
-
-    if (!cachedFile || !cachedBase64) {
-        showError("corporate-tax-return", "Please upload the Corporate Tax Return.");
-        hasError = true;
-    }
-
-    if (hasError) {
-        if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Submit";
-        }
-        return;
-    }
-
-    const today = new Date();
-    const isoDate = today.toISOString().split("T")[0];
-
-    try {
-      await ZOHO.CRM.API.updateRecord({
-          Entity: "Applications1",
-          APIData: {
-              id: app_id,
-              Reference_Number: referenceNo,
-              Legal_Name_of_Taxable_Person: taxablePerson,
-              Tax_Registration_Number_TRN: taxRegNo,
-              Tax_Period_CT: taxPeriodCt,
-              Financial_Year_Ending: financialYear,
-              Tax_Paid: taxPaid,
-              Application_Issuance_Date: isoDate,
-              Application_Date: isoDate
-            }
-        });
-
-        const ctReturnDd = getCTReturnDueDate(taxPeriodCt, financialYear);
-        console.log(ctReturnDd);
-
-        await ZOHO.CRM.API.updateRecord({
-            Entity: "Accounts",
-            APIData: {
-                id: account_id,
-                CT_Status: "Active",
-                CT_Return_DD: ctReturnDd,
-            }
-        });
-
-        await uploadFileToCRM();
-        await ZOHO.CRM.BLUEPRINT.proceed();
-        await ZOHO.CRM.UI.Popup.closeReload();
-
-    } catch (error) {
-        console.error("Error on final submit:", error);
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "Submit";
-        }
-    }
+  }
 }
-
 
 document.getElementById("corporate-tax-return").addEventListener("change", cacheFileOnChange);
 document.getElementById("record-form").addEventListener("submit", update_record);
@@ -236,5 +264,3 @@ async function closeWidget() {
 }
 
 ZOHO.embeddedApp.init();
-
-
