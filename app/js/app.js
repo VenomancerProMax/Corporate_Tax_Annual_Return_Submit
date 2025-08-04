@@ -197,7 +197,8 @@ async function update_record(event = null) {
               Tax_Period_CT: taxPeriodCt,
               Financial_Year_Ending: financialYear,
               Tax_Paid: taxPaid,
-              Application_Issuance_Date: isoDate
+              Application_Issuance_Date: isoDate,
+              Application_Date: isoDate
             }
         });
 
@@ -225,6 +226,7 @@ async function update_record(event = null) {
         }
     }
 }
+
 
 document.getElementById("corporate-tax-return").addEventListener("change", cacheFileOnChange);
 document.getElementById("record-form").addEventListener("submit", update_record);
