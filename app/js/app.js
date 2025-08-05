@@ -274,7 +274,6 @@ async function update_record(event = null) {
         Corporate_Tax_TRN: taxRegNo,
         CT_Return_DD: ctReturnDd,
         Legal_Name_of_Taxable_Person: taxablePerson,
-        Corporate_Tax_TRN: taxRegNo
       },
     });
 
