@@ -14,6 +14,15 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     app_id = applicationData.id;
     account_id = applicationData.Account_Name.id;
     console.log("ACCOUNT ID: ", account_id);
+
+    var config = {
+      "Entity": "Applications1",
+      "RecordID": app_id
+    };
+    ZOHO.CRM.API.getBluePrint(config).then(function(data) {
+      console.log("BLUEPRINT ", data);
+    });
+
   } catch (err) {
     console.error(err);
   }
@@ -46,7 +55,6 @@ function hideUploadBuffer() {
   if (buffer) buffer.classList.add("hidden");
 }
 
-// Returns YYYY-MM-DD of last day + 1 year 9 months
 function getCTReturnDueDate(taxPeriodCT, financialYearEnding) {
   const parts = (taxPeriodCT || "").split(" - ");
   if (parts.length !== 2) return null;
@@ -58,10 +66,24 @@ function getCTReturnDueDate(taxPeriodCT, financialYearEnding) {
   const monthIndex = new Date(`${endMonth} 1, ${year}`).getMonth();
   const lastDayDate = new Date(year, monthIndex + 1, 0);
 
-  lastDayDate.setFullYear(lastDayDate.getFullYear() + 1);
-  lastDayDate.setMonth(lastDayDate.getMonth() + 9);
+  // Add 1 year and 9 months... 21 months is 1 year and 9 months
+  const shifted = new Date(lastDayDate);
+  shifted.setMonth(shifted.getMonth() + 21);
 
-  return lastDayDate.toISOString().split("T")[0];
+  // Get the final day of the new month
+  const finalDueDate = new Date(shifted.getFullYear(), shifted.getMonth() + 1, 0);
+
+  // Adjust to next business day if weekend
+  const day = finalDueDate.getDay();
+  if (day === 6) {
+    finalDueDate.setDate(finalDueDate.getDate() + 2);
+  } else if (day === 0) {
+    finalDueDate.setDate(finalDueDate.getDate() + 1);
+  }
+
+  console.log("finalDueDate", finalDueDate.getFullYear() + "-" + String(finalDueDate.getMonth() + 1).padStart(2, '0') + "-" + String(finalDueDate.getDate()).padStart(2, '0'));
+
+  return finalDueDate.getFullYear() + "-" + String(finalDueDate.getMonth() + 1).padStart(2, '0') + "-" + String(finalDueDate.getDate()).padStart(2, '0');
 }
 
 function validateFinancialYear(fy) {
@@ -163,27 +185,28 @@ async function update_record(event = null) {
   const taxPeriodCt = document.getElementById("tax-period-ct")?.value;
   const financialYear = document.getElementById("financial-year")?.value;
   const taxPaid = document.getElementById("tax-paid")?.value;
+  const subDate = document.getElementById("submission-date")?.value;
 
+  if (!subDate) {
+    showError("submission-date", "Submission Date is required.");
+    hasError = true;
+  }
   if (!referenceNo) {
     showError("reference-number", "Reference Number is required.");
     hasError = true;
   }
-
   if (!taxablePerson) {
     showError("name-of-taxable-person", "Legal Name of Taxable Person is required.");
     hasError = true;
   }
-
   if (!taxRegNo) {
     showError("tax-registration-number", "Tax Registration Number is required.");
     hasError = true;
   }
-
   if (!taxPeriodCt) {
     showError("tax-period-ct", "Tax Period CT is required.");
     hasError = true;
   }
-
   if (!financialYear) {
     showError("financial-year", "Financial Year (Ending) is required.");
     hasError = true;
@@ -194,12 +217,10 @@ async function update_record(event = null) {
       hasError = true;
     }
   }
-
   if (!taxPaid) {
     showError("tax-paid", "Tax Paid is required.");
     hasError = true;
   }
-
   if (!cachedFile || !cachedBase64) {
     showError("corporate-tax-return", "Please upload the Corporate Tax Return.");
     hasError = true;
@@ -213,9 +234,6 @@ async function update_record(event = null) {
     return;
   }
 
-  const today = new Date();
-  const isoDate = today.toISOString().split("T")[0];
-
   try {
     await ZOHO.CRM.API.updateRecord({
       Entity: "Applications1",
@@ -227,8 +245,8 @@ async function update_record(event = null) {
         Tax_Period_CT: taxPeriodCt,
         Financial_Year_Ending: financialYear,
         Tax_Paid: taxPaid,
-        Application_Issuance_Date: isoDate,
-        Application_Date: isoDate,
+        Application_Date: subDate,
+        Application_Issuance_Date: subDate,
       },
     });
 
