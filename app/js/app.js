@@ -13,15 +13,29 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     const applicationData = appResponse.data[0];
     app_id = applicationData.id;
     account_id = applicationData.Account_Name.id;
-    console.log("ACCOUNT ID: ", account_id);
 
-    var config = {
-      "Entity": "Applications1",
-      "RecordID": app_id
-    };
-    ZOHO.CRM.API.getBluePrint(config).then(function(data) {
-      console.log("BLUEPRINT ", data);
+    const accountResponse = await ZOHO.CRM.API.getRecord({
+      Entity: "Accounts",
+      approved: "both",
+      RecordID: account_id,
     });
+    const accountData = accountResponse.data[0];
+    taxPeriod = accountData.Tax_Period_CT;
+    ctTrn = accountData.Corporate_Tax_TRN;
+    legalNameTaxablePerson = accountData.Legal_Name_of_Taxable_Person;
+
+    console.log("TAX PERIOD CT : ", taxPeriod);
+    console.log("TAX REGISTRATION NUMBER : ", ctTrn);
+    console.log("LEGAL NAME OF TAXABLE PERSON: ", legalNameTaxablePerson);
+
+    document.getElementById("tax-period-ct").value = taxPeriod || "";
+    document.getElementById("tax-registration-number").value = ctTrn || "";
+    document.getElementById("name-of-taxable-person").value = legalNameTaxablePerson || "";
+
+    ZOHO.CRM.UI.Resize({ height: "80%"}).then(function(data) {
+      console.log("Resize result:", data);
+    });
+
 
   } catch (err) {
     console.error(err);
@@ -63,27 +77,25 @@ function getCTReturnDueDate(taxPeriodCT, financialYearEnding) {
   const year = parseInt(financialYearEnding, 10);
   if (isNaN(year)) return null;
 
+  // Get 0-based month index
   const monthIndex = new Date(`${endMonth} 1, ${year}`).getMonth();
-  const lastDayDate = new Date(year, monthIndex + 1, 0);
 
-  // Add 1 year and 9 months... 21 months is 1 year and 9 months
-  const shifted = new Date(lastDayDate);
-  shifted.setMonth(shifted.getMonth() + 21);
+  // Get last day of end month
+  const baseDate = new Date(year, monthIndex + 1, 0);
 
-  // Get the final day of the new month
-  const finalDueDate = new Date(shifted.getFullYear(), shifted.getMonth() + 1, 0);
+  // Add 21 months without overflow
+  const targetYear = baseDate.getFullYear() + Math.floor((baseDate.getMonth() + 21) / 12);
+  const targetMonth = (baseDate.getMonth() + 21) % 12;
 
-  // Adjust to next business day if weekend
-  const day = finalDueDate.getDay();
-  if (day === 6) {
-    finalDueDate.setDate(finalDueDate.getDate() + 2);
-  } else if (day === 0) {
-    finalDueDate.setDate(finalDueDate.getDate() + 1);
-  }
+  // Get last day of the resulting month
+  const dueDate = new Date(targetYear, targetMonth + 1, 0);
 
-  console.log("finalDueDate", finalDueDate.getFullYear() + "-" + String(finalDueDate.getMonth() + 1).padStart(2, '0') + "-" + String(finalDueDate.getDate()).padStart(2, '0'));
-
-  return finalDueDate.getFullYear() + "-" + String(finalDueDate.getMonth() + 1).padStart(2, '0') + "-" + String(finalDueDate.getDate()).padStart(2, '0');
+  // Format yyyy-mm-dd
+  return (
+    dueDate.getFullYear() + "-" +
+    String(dueDate.getMonth() + 1).padStart(2, "0") + "-" +
+    String(dueDate.getDate()).padStart(2, "0")
+  );
 }
 
 function validateFinancialYear(fy) {
@@ -258,7 +270,11 @@ async function update_record(event = null) {
       APIData: {
         id: account_id,
         CT_Status: "Active",
+        Tax_Period_CT: taxPeriodCt,
+        Corporate_Tax_TRN: taxRegNo,
         CT_Return_DD: ctReturnDd,
+        Legal_Name_of_Taxable_Person: taxablePerson,
+        Corporate_Tax_TRN: taxRegNo
       },
     });
 
