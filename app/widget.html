@@ -21,6 +21,10 @@
         <input type="text" id="tax-registration-number" name="tax-registration-number"/>
         <span class="error-message" id="error-tax-registration-number"></span>
 
+        <label for="submission-date">Submission Date <span style="color: red;">*</span></label>
+        <input type="date" id="submission-date" name="submission-date" required />
+        <span class="error-message" id="error-submission-date"></span>
+
         <label for="tax-period-ct" style="margin-top: 16px; display: block;">Tax Period CT <span style="color: red;">*</span></label>
           <select id="tax-period-ct" name="tax-period-ct">
             <option value="" disabled selected>Select ...</option>
@@ -39,11 +43,9 @@
         </select>
         <span class="error-message" id="error-tax-period-ct"></span>
 
-        <label for="submission-date">Submission Date <span style="color: red;">*</span></label>
-        <input type="date" id="submission-date" name="submission-date" required />
-        <span class="error-message" id="error-submission-date"></span>
-
-        <label for="financial-year">Financial Year (Ending) <span style="color: red;">*</span></label>
+        <label for="financial-year">Financial Year (Ending) 
+          <span title="Enter a 4-digit year from 2025 to 2050" style="cursor: help; color: #555;">&#9432;</span>
+          <span style="color: red;">*</span></label>
         <input type="number" id="financial-year" name="financial-year" min="2025" max="2050" step="1" placeholder="2025" />
         <span class="error-message" id="error-financial-year"></span>
 
