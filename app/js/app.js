@@ -22,7 +22,7 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     const accountData = accountResponse.data[0];
     taxPeriod = accountData.Tax_Period_CT;
     ctTrn = accountData.Corporate_Tax_TRN;
-    legalNameTaxablePerson = accountData.Legal_Name_of_Taxable_Person;
+    legalNameTaxablePerson = accountData.Account_Name;
 
     console.log("TAX PERIOD CT : ", taxPeriod);
     console.log("TAX REGISTRATION NUMBER : ", ctTrn);
@@ -32,7 +32,7 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     document.getElementById("tax-registration-number").value = ctTrn || "";
     document.getElementById("name-of-taxable-person").value = legalNameTaxablePerson || "";
 
-    ZOHO.CRM.UI.Resize({ height: "80%"}).then(function(data) {
+    ZOHO.CRM.UI.Resize({ height: "100%"}).then(function(data) {
       console.log("Resize result:", data);
     });
 
@@ -198,6 +198,11 @@ async function update_record(event = null) {
   const financialYear = document.getElementById("financial-year")?.value;
   const taxPaid = document.getElementById("tax-paid")?.value;
   const subDate = document.getElementById("submission-date")?.value;
+  const paymentRef = document.getElementById("payment-reference")?.value;
+
+  if(!paymentRef) {
+    showError("payment-reference", "Payment Reference is required");
+  }
 
   if (!subDate) {
     showError("submission-date", "Submission Date is required.");
@@ -259,6 +264,7 @@ async function update_record(event = null) {
         Tax_Paid: taxPaid,
         Application_Date: subDate,
         Application_Issuance_Date: subDate,
+        Payment_Reference: paymentRef,
       },
     });
 
