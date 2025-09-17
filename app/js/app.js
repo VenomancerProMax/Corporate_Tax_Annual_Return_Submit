@@ -2,6 +2,10 @@ let app_id, account_id;
 let cachedFile = null;
 let cachedBase64 = null;
 
+// NEW: separate cache for payment-instruction
+let cachedFilePayment = null;
+let cachedBase64Payment = null;
+
 ZOHO.embeddedApp.on("PageLoad", async (entity) => {
   try {
     const entity_id = entity.EntityId;
@@ -132,13 +136,12 @@ if (fyInput) {
 
 async function cacheFileOnChange(event) {
   clearErrors();
-
   const fileInput = event.target;
   const file = fileInput?.files[0];
   if (!file) return;
 
   if (file.size > 20 * 1024 * 1024) {
-    showError("corporate-tax-return", "File size must not exceed 20MB.");
+    showError(fileInput.id, "File size must not exceed 20MB.");
     return;
   }
 
@@ -152,32 +155,81 @@ async function cacheFileOnChange(event) {
       reader.readAsArrayBuffer(file);
     });
 
-    cachedFile = file;
-    cachedBase64 = base64;
+    // cache depending on which input triggered
+    if (fileInput.id === "corporate-tax-return") {
+      cachedFile = file;
+      cachedBase64 = base64;
+    } else if (fileInput.id === "payment-instruction") {
+      cachedFilePayment = file;
+      cachedBase64Payment = base64;
+    }
 
     await new Promise((res) => setTimeout(res, 3000));
     hideUploadBuffer();
   } catch (err) {
     console.error("Error caching file:", err);
     hideUploadBuffer();
-    showError("corporate-tax-return", "Failed to read file.");
+    showError(event.target.id, "Failed to read file.");
   }
 }
 
 async function uploadFileToCRM() {
-  if (!cachedFile || !cachedBase64) {
-    throw new Error("No cached file");
+  // attach corporate-tax-return
+  if (cachedFile && cachedBase64) {
+    await ZOHO.CRM.API.attachFile({
+      Entity: "Applications1",
+      RecordID: app_id,
+      File: { Name: cachedFile.name, Content: cachedBase64 },
+    });
+  }
+  // NEW: attach payment-instruction if present
+  if (cachedFilePayment && cachedBase64Payment) {
+    await ZOHO.CRM.API.attachFile({
+      Entity: "Applications1",
+      RecordID: app_id,
+      File: { Name: cachedFilePayment.name, Content: cachedBase64Payment },
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const paymentReference = document.getElementById("payment-reference");
+  const paymentInstruction = document.getElementById("payment-instruction");
+  const taxPaid = document.getElementById("tax-paid");
+
+  const paymentRefLabel = document.getElementById("payment-ref-label");
+  const paymentInstLabel = document.getElementById("payment-inst-label");
+
+  function checkTax() {
+    const value = parseFloat(taxPaid.value) || 0;
+
+    if (value > 0) {
+      // Add required + red *
+      paymentReference.setAttribute("required", "required");
+      paymentInstruction.setAttribute("required", "required");
+
+      if (!paymentRefLabel.querySelector(".required-star")) {
+        paymentRefLabel.innerHTML =
+          'Payment Reference <span class="required-star" style="color:red">*</span>';
+      }
+
+      if (!paymentInstLabel.querySelector(".required-star")) {
+        paymentInstLabel.innerHTML =
+          'Payment Instruction </span> <span class="required-star" style="color:red">*</span>';
+      }
+
+    } else {
+      // Remove required + red *
+      paymentReference.removeAttribute("required");
+      paymentInstruction.removeAttribute("required");
+
+      paymentRefLabel.textContent  = "Payment Reference";
+      paymentInstLabel.innerHTML = "Payment Instruction";
+    }
   }
 
-  return await ZOHO.CRM.API.attachFile({
-    Entity: "Applications1",
-    RecordID: app_id,
-    File: {
-      Name: cachedFile.name,
-      Content: cachedBase64,
-    },
-  });
-}
+  taxPaid.addEventListener("input", checkTax);
+});
 
 async function update_record(event = null) {
   if (event) event.preventDefault();
@@ -199,8 +251,8 @@ async function update_record(event = null) {
   const taxPaid = document.getElementById("tax-paid")?.value;
   const subDate = document.getElementById("submission-date")?.value;
   const paymentRef = document.getElementById("payment-reference")?.value;
-
-  if(!paymentRef) {
+ 
+  if(!paymentRef && taxPaid > 0) {
     showError("payment-reference", "Payment Reference is required");
   }
 
@@ -240,6 +292,12 @@ async function update_record(event = null) {
   }
   if (!cachedFile || !cachedBase64) {
     showError("corporate-tax-return", "Please upload the Corporate Tax Return.");
+    hasError = true;
+  }
+
+  // NEW: check payment-instruction required?
+  if (taxPaid > 0 && (!cachedFilePayment || !cachedBase64Payment)) {
+    showError("payment-instruction", "Please upload the Payment Instruction.");
     hasError = true;
   }
 
@@ -296,6 +354,7 @@ async function update_record(event = null) {
 }
 
 document.getElementById("corporate-tax-return").addEventListener("change", cacheFileOnChange);
+document.getElementById("payment-instruction").addEventListener("change", cacheFileOnChange);
 document.getElementById("record-form").addEventListener("submit", update_record);
 
 async function closeWidget() {

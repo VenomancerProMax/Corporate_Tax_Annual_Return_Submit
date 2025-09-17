@@ -56,9 +56,16 @@
         </div>
         <span class="error-message" id="error-tax-paid"></span>
 
-        <label for="payment-reference">Payment Reference <span style="color: red;">*</span></label>
+        <label for="payment-reference" id="payment-ref-label">Payment Reference</label>
         <input type="text" id="payment-reference" name="payment-reference"/>
         <span class="error-message" id="error-payment-reference"></span>
+
+        <label for="payment-instruction" id="payment-inst-label" style="margin-top: 16px; display: block;">Payment Instruction 
+          <span title="Drag and drop your file here, or click “Choose File” to upload the Payment Instruction." style="cursor: help; color: #555;">&#9432;</span>
+          <span style="color: red;"></span>
+        </label>
+        <input type="file" id="payment-instruction" name="payment-instruction" accept=".pdf,.jpg,.jpeg,.png" required />
+        <span class="error-message" id="error-payment-instruction" style="color: red; font-size: 12px;"></span>
 
         <label for="corporate-tax-return" style="margin-top: 16px; display: block;">Corporate Tax Return 
           <span title="Drag and drop your file here, or click “Choose File” to upload the Corporate Tax Return." style="cursor: help; color: #555;">&#9432;</span>
