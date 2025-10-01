@@ -119,18 +119,29 @@ function validateFinancialYear(fy) {
   return "";
 }
 
-// NEW: Function to calculate financial year
+// NEW: Corrected function to calculate financial year by subtracting 9 months
 function getFinancialYear(ctReturnDD) {
     if (!ctReturnDD) return null;
 
     // Convert string to Date object
     const returnDate = new Date(ctReturnDD);
 
-    // Subtract 90 days (90 * 24 * 60 * 60 * 1000 milliseconds)
-    const financialDate = new Date(returnDate.getTime() - 90 * 24 * 60 * 60 * 1000);
+    // Get the month (0-11)
+    let month = returnDate.getMonth();
+    // Get the year
+    let year = returnDate.getFullYear();
 
-    // Return the full year
-    return financialDate.getFullYear();
+    // Subtract 9 months
+    month -= 9;
+
+    // Adjust year if month becomes negative
+    if (month < 0) {
+        month += 12;
+        year -= 1;
+    }
+
+    // Create a new date and return the year
+    return new Date(year, month, 1).getFullYear();
 }
 
 const fyInput = document.getElementById("financial-year");
