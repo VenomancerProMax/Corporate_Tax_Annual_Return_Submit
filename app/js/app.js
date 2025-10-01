@@ -36,11 +36,11 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     document.getElementById("tax-period-ct").value = taxPeriod || "";
     document.getElementById("tax-registration-number").value = ctTrn || "";
     document.getElementById("name-of-taxable-person").value = legalNameTaxablePerson || "";
-    
-    // Auto-populate the financial year
-    if (accountCTReturnDD) {
-        document.getElementById("financial-year").value = getFinancialYear(accountCTReturnDD);
-    }
+    
+    // Auto-populate the financial year
+    if (accountCTReturnDD) {
+        document.getElementById("financial-year").value = getFinancialYear(accountCTReturnDD);
+    }
 
     ZOHO.CRM.UI.Resize({ height: "100%"}).then(function(data) {
       console.log("Resize result:", data);
@@ -113,56 +113,35 @@ function validateFinancialYear(fy) {
     return "Enter a four-digit year (e.g., 2025).";
   }
   const year = parseInt(fy, 10);
-  if (year < 2025 || year > 2050) {
+  if (year > 2050) {
     return "Year must be between 2025 and 2050.";
   }
   return "";
 }
 
-// NEW: Corrected function to calculate financial year by subtracting 9 months
+// Corrected function to calculate financial year by subtracting 9 months
 function getFinancialYear(ctReturnDD) {
-    if (!ctReturnDD) return null;
+    if (!ctReturnDD) return null;
 
-    // Convert string to Date object
-    const returnDate = new Date(ctReturnDD);
+    // Convert string to Date object
+    const returnDate = new Date(ctReturnDD);
 
-    // Get the month (0-11)
-    let month = returnDate.getMonth();
-    // Get the year
-    let year = returnDate.getFullYear();
+    // Get the month (0-11)
+    let month = returnDate.getMonth();
+    // Get the year
+    let year = returnDate.getFullYear();
 
-    // Subtract 9 months
-    month -= 9;
+    // Subtract 9 months
+    month -= 9;
 
-    // Adjust year if month becomes negative
-    if (month < 0) {
-        month += 12;
-        year -= 1;
-    }
-
-    // Create a new date and return the year
-    return new Date(year, month, 1).getFullYear();
-}
-
-const fyInput = document.getElementById("financial-year");
-if (fyInput) {
-  fyInput.addEventListener("input", () => {
-    fyInput.value = fyInput.value.replace(/\D/g, "").slice(0, 4);
-    const err = validateFinancialYear(fyInput.value);
-    if (!err) {
-      const span = document.getElementById("error-financial-year");
-      if (span) span.textContent = "";
+    // Adjust year if month becomes negative
+    if (month < 0) {
+        month += 12;
+        year -= 1;
     }
-  });
-  fyInput.addEventListener("blur", () => {
-    const val = fyInput.value;
-    if (/^\d{4}$/.test(val)) {
-      let year = parseInt(val, 10);
-      if (year < 2025) year = 2025;
-      if (year > 2050) year = 2050;
-      fyInput.value = String(year);
-    }
-  });
+
+    // Create a new date and return the year
+    return new Date(year, month, 1).getFullYear();
 }
 
 async function cacheFileOnChange(event) {
