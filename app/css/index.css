@@ -24,12 +24,27 @@ body {
   position: relative;
 }
 
-.form-container label:not(:first-of-type) {
-  margin-top: 16px;
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
+/* Updated CSS for all form groups */
+.form-group {
+    margin-bottom: 16px; /* A simple bottom margin for consistent spacing */
 }
+
+.form-group:last-of-type {
+    margin-bottom: 0; /* Remove margin from the last group */
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Specific fix for the file input label, which has special styling */
+.form-group label[for="corporate-tax-return"] {
+    margin-top: 16px;
+    display: block;
+}
+
 
 input[type="text"],
 input[type="number"],
@@ -48,7 +63,6 @@ select {
 select:focus,
 input:focus {
   outline: none;
-  /* box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.4); */
 }
 
 input[type="file"] {
