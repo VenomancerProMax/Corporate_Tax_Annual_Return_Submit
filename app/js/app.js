@@ -62,7 +62,9 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     const ctTrn = accountData.Corporate_Tax_TRN;
     const legalNameTaxablePerson = accountData.Legal_Name_of_Taxable_Person || applicationData.Account_Name.name || "";
     const accountCTReturnDD = accountData.CT_Return_DD;
+    const ct_pay_giban_account = accountData.CT_Pay_GIBAN; 
 
+    document.getElementById("pay-giban").value = ct_pay_giban_account || "";
     document.getElementById("tax-period-ct").value = taxPeriod || "";
     document.getElementById("tax-registration-number").value = ctTrn || "";
     document.getElementById("name-of-taxable-person").value = legalNameTaxablePerson || "";
