@@ -49,7 +49,15 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     });
     const applicationData = appResponse.data[0];
     app_id = applicationData.id;
-    account_id = applicationData.Account_Name.id;
+    
+    // Check for Account ID and handle if missing
+    if (!applicationData.Account_Name || !applicationData.Account_Name.id) {
+        console.error("Application record is missing a linked Account ID. Cannot proceed with data fetch.");
+        // Prevent setting account_id if null/undefined
+        // The submission logic will catch this later, but useful to log now.
+    } else {
+        account_id = applicationData.Account_Name.id;
+    }
 
     const accountResponse = await ZOHO.CRM.API.getRecord({
       Entity: "Accounts",
@@ -229,6 +237,7 @@ async function update_record(event) {
   const subDate = document.getElementById("submission-date")?.value.trim();
   const paymentRef = document.getElementById("payment-reference")?.value.trim();
   const payGiban = document.getElementById("pay-giban")?.value.trim();
+  const safe_account_id = account_id ? account_id.trim() : "";
 
   if (!subDate) {
     showError("submission-date", "Submission Date is required.");
@@ -280,6 +289,12 @@ async function update_record(event) {
       hasError = true;
     }
 
+    if (!safe_account_id) {
+    showError("submit_button_id", "Error: Associated Account ID is missing. Cannot proceed.");
+    hasError = true;
+    console.error("FATAL ERROR: Account ID is missing.");
+  }
+
     if (!cachedFilePayment || !cachedBase64Payment) {
       showError("payment-instruction", "Please upload the Payment Instruction.");
       hasError = true;
@@ -316,18 +331,21 @@ async function update_record(event) {
       },
     });
 
-    await ZOHO.CRM.API.updateRecord({
-      Entity: "Accounts",
-      APIData: {
-        id: account_id,
-        CT_Status: "Active",
-        Tax_Period_CT: taxPeriodCt,
-        Corporate_Tax_TRN: taxRegNo,
-        CT_Return_DD: ctReturnDd,
-        Legal_Name_of_Taxable_Person: taxablePerson,
-        CT_Pay_GIBAN: payGiban
-      },
-    });
+    // Pass ALL required data to the Deluge function via JSON string
+    const func_name = "ta_ctar_complete_the_process_update_account";
+    const req_data = {
+        "arguments": JSON.stringify({
+            "account_id": safe_account_id,
+            "tax_period_ct": taxPeriodCt,
+            "corporate_tax_trn": taxRegNo,
+            "ct_return_dd": ctReturnDd,
+            "pay_giban": payGiban,
+            "legal_taxable_person": taxablePerson
+        })
+    };
+
+    const accountResponse = await ZOHO.CRM.FUNCTIONS.execute(func_name, req_data);
+    console.log("Account Update Function Response:", accountResponse);
 
     await uploadFileToCRM();
     await ZOHO.CRM.BLUEPRINT.proceed();
