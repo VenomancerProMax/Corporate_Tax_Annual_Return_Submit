@@ -4,38 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://live.zwidgets.com/js-sdk/1.2/ZohoEmbededAppSDK.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" type="text/css" href="css/index.css">
   </head>
   <body>
     <div class="form-container">
       <form id="record-form" novalidate>
         <div class="form-group">
-          <label for="reference-number">Reference Number <span style="color: red;">*</span></label>
-          <input type="text" id="reference-number" name="reference-number"/>
+          <label>Reference Number <span class="text-red-500">*</span></label>
+          <input type="text" id="reference-number" />
           <span class="error-message" id="error-reference-number"></span>
         </div>
 
         <div class="form-group">
-          <label for="name-of-taxable-person">Legal Name of Taxable Person <span style="color: red;">*</span></label>
-          <input type="text" id="name-of-taxable-person" name="name-of-taxable-person"/>
+          <label>Legal Name of Taxable Person <span class="text-red-500">*</span></label>
+          <input type="text" id="name-of-taxable-person" />
           <span class="error-message" id="error-name-of-taxable-person"></span>
         </div>
 
         <div class="form-group">
-          <label for="tax-registration-number">Tax Registration Number <span style="color: red;">*</span></label>
-          <input type="text" id="tax-registration-number" name="tax-registration-number"/>
+          <label>Tax Registration Number <span class="text-red-500">*</span></label>
+          <input type="text" id="tax-registration-number" />
           <span class="error-message" id="error-tax-registration-number"></span>
         </div>
 
         <div class="form-group">
-          <label for="submission-date">Submission Date <span style="color: red;">*</span></label>
-          <input type="date" id="submission-date" name="submission-date" required />
+          <label>Submission Date <span class="text-red-500">*</span></label>
+          <input type="date" id="submission-date" />
           <span class="error-message" id="error-submission-date"></span>
         </div>
 
         <div class="form-group">
-          <label for="tax-period-ct">Tax Period CT <span style="color: red;">*</span></label>
-          <select id="tax-period-ct" name="tax-period-ct">
+          <label>Tax Period CT <span class="text-red-500">*</span></label>
+          <select id="tax-period-ct">
             <option value="" disabled selected>Select ...</option>
             <option value="January - December">January - December</option>
             <option value="February - January">February - January</option>
@@ -54,73 +55,77 @@
         </div>
 
         <div class="form-group">
-          <label for="financial-year">Financial Year (Ending)
-            <span title="Enter a 4-digit year from 2025 to 2050" style="cursor: help; color: #555;">&#9432;</span>
-            <span style="color: red;">*</span></label>
-          <input type="number" id="financial-year" name="financial-year" min="2025" max="2050" step="1"  />
+          <label>Financial Year (Ending) <span class="text-red-500">*</span></label>
+          <input type="number" id="financial-year" min="2025" max="2050" />
           <span class="error-message" id="error-financial-year"></span>
         </div>
 
         <div class="form-group">
-          <label for="tax-paid">Tax Amount (AED) <span style="color: red;">*</span></label>
+          <label>Tax Amount (AED) <span class="text-red-500">*</span></label>
           <div class="input-group">
             <span class="currency">AED</span>
-            <input type="number" id="tax-paid" name="tax-paid" min="0" step="0.01" placeholder="0.00" aria-label="Tax Paid in AED" />
+            <input type="number" id="tax-paid" step="0.01" />
           </div>
           <span class="error-message" id="error-tax-paid"></span>
         </div>
 
-        <div id="payment-fields" class="form-group" style="display: none;">
+        <div id="payment-fields" style="display: none;">
           <div class="form-group">
-            <label for="payment-reference" id="payment-ref-label">Payment Reference</label>
-            <input type="text" id="payment-reference" name="payment-reference"/>
+            <label>Payment Reference</label>
+            <input type="text" id="payment-reference" />
             <span class="error-message" id="error-payment-reference"></span>
           </div>
-
           <div class="form-group">
-            <label for="payment-instruction" id="payment-inst-label">Payment Instruction
-              <span title="Drag and drop your file here, or click “Choose File” to upload the Payment Instruction." style="cursor: help; color: #555;">&#9432;</span>
-              <span style="color: red;"></span>
-            </label>
-            <input type="file" id="payment-instruction" name="payment-instruction" accept=".pdf,.jpg,.jpeg,.png" required />
-            <span class="error-message" id="error-payment-instruction" style="color: red; font-size: 12px;"></span>
+            <label>Payment Instruction</label>
+            <div class="drop-zone" data-input-id="payment-instruction">
+              <span id="payment-text">Click or Drop Payment Instruction</span>
+              <input type="file" id="payment-instruction" class="hidden" />
+            </div>
+            <span class="error-message" id="error-payment-instruction"></span>
           </div>
-
           <div class="form-group">
-            <label for="pay-giban" id="pay-giban-label">Pay (GIBAN)</label>
-            <input type="text" id="pay-giban" name="pay-giban"/>
+            <label>Pay (GIBAN)</label>
+            <input type="text" id="pay-giban" />
             <span class="error-message" id="error-pay-giban"></span>
           </div>
         </div>
+
         <div class="form-group">
-          <label for="corporate-tax-return">Corporate Tax Return
-            <span title="Drag and drop your file here, or click “Choose File” to upload the Corporate Tax Return." style="cursor: help; color: #555;">&#9432;</span>
-            <span style="color: red;">*</span>
-          </label>
-          <input type="file" id="corporate-tax-return" name="corporate-tax-return" accept=".pdf,.jpg,.jpeg,.png" required />
-          <span class="error-message" id="error-corporate-tax-return" style="color: red; font-size: 12px;"></span>
+          <label>Corporate Tax Return <span class="text-red-500">*</span></label>
+          <div class="drop-zone" data-input-id="corporate-tax-return">
+            <span id="return-text">Click or Drop Tax Return</span>
+            <input type="file" id="corporate-tax-return" class="hidden" />
+          </div>
+          <span class="error-message" id="error-corporate-tax-return"></span>
         </div>
 
-        <button class="submit-button" type="submit" id="submit_button_id" onclick="complete_trigger()">Submit</button>
+        <button class="submit-button" type="submit" id="submit_button_id">Submit</button>
       </form>
     </div>
 
-    <div id="upload-buffer" class="upload-overlay hidden" aria-live="polite" role="status">
+    <div id="custom-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 px-4">
+        <div class="w-full max-w-[280px] rounded-lg bg-white p-6 text-center shadow-xl">
+            <div id="modal-icon-success" class="mx-auto mb-2 text-green-500 hidden text-4xl">✓</div>
+            <div id="modal-icon-error" class="mx-auto mb-2 text-red-500 hidden text-4xl">✕</div>
+            <div id="modal-icon-loading" class="mx-auto mb-4 hidden">
+                <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#4A90E2] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+            </div>
+            <h3 id="modal-title" class="text-sm font-bold text-gray-800"></h3>
+            <p id="modal-message" class="text-[11px] text-gray-500 mt-1"></p>
+            <button id="modal-close" class="mt-4 w-full rounded bg-[#4A90E2] py-2 text-[11px] font-bold text-white uppercase tracking-wider"></button>
+        </div>
+    </div>
+
+    <div id="upload-buffer" class="upload-overlay hidden">
       <div class="upload-box">
-        <div class="upload-icon">&#128228;</div>
-        <div class="upload-title" id="upload-title">Uploading your file...</div>
-        <div class="progress-wrapper">
-          <div class="progress-bar-background">
-            <div id="upload-progress" class="progress-bar-fill animate"></div>
-          </div>
+        <div class="text-xs font-bold">Processing File...</div>
+        <div class="progress-bar-background">
+          <div id="upload-progress" class="progress-bar-fill animate"></div>
         </div>
       </div>
     </div>
 
-    <div>
-      <button class="close-button" onclick="closeWidget()">×</button>
-    </div>
-
+    <button class="close-button" onclick="closeWidget()">×</button>
     <script src="js/app.js"></script>
   </body>
 </html>
