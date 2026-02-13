@@ -165,13 +165,15 @@ async function update_record(event) {
   clearErrors();
   let hasError = false;
 
+  const rawTaxPaid = document.getElementById("tax-paid").value.replace(/,/g, "");
+
   const data = {
     referenceNo: document.getElementById("reference-number").value.trim(),
     taxablePerson: document.getElementById("name-of-taxable-person").value.trim(),
     taxRegNo: document.getElementById("tax-registration-number").value.trim(),
     taxPeriodCt: document.getElementById("tax-period-ct").value,
     financialYear: document.getElementById("financial-year").value,
-    taxPaid: document.getElementById("tax-paid").value,
+    taxPaid: rawTaxPaid,
     subDate: document.getElementById("submission-date").value,
     paymentRef: document.getElementById("payment-reference").value.trim(),
     payGiban: document.getElementById("pay-giban").value.trim()
@@ -239,6 +241,17 @@ function initializeDragAndDrop() {
   });
 }
 
+const taxInput = document.getElementById("tax-paid");
+taxInput.addEventListener("blur", function(e) {
+    let rawValue = e.target.value.replace(/,/g, "");
+    
+    if (rawValue !== "" && !isNaN(rawValue)) {
+        e.target.value = new Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(parseFloat(rawValue));
+    }
+});
 function initializeListeners() {
   document.getElementById("record-form").addEventListener("submit", update_record);
   document.getElementById("tax-paid").addEventListener("input", (e) => {
