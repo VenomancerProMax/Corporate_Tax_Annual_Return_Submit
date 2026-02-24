@@ -10,12 +10,9 @@ function showModal(type, title, message) {
   const iconError = document.getElementById("modal-icon-error");
   const iconLoading = document.getElementById("modal-icon-loading");
   const modalBtn = document.getElementById("modal-close");
-  
   document.getElementById("modal-title").textContent = title;
   document.getElementById("modal-message").textContent = message;
-
   [iconSuccess, iconError, iconLoading].forEach(el => el.classList.add("hidden"));
-
   if (type === "loading") {
     iconLoading.classList.remove("hidden");
     modalBtn.classList.add("hidden");
@@ -69,15 +66,12 @@ ZOHO.embeddedApp.on("PageLoad", async (entity) => {
     const applicationData = appResponse.data[0];
     app_id = applicationData.id;
     account_id = applicationData.Account_Name?.id;
-
     const accountResponse = await ZOHO.CRM.API.getRecord({ Entity: "Accounts", RecordID: account_id });
     const accountData = accountResponse.data[0];
-
     document.getElementById("pay-giban").value = accountData.CT_Pay_GIBAN || "";
     document.getElementById("tax-period-ct").value = accountData.Tax_Period_CT || "";
     document.getElementById("tax-registration-number").value = accountData.Corporate_Tax_TRN || "";
     document.getElementById("name-of-taxable-person").value = accountData.Legal_Name_of_Taxable_Person || applicationData.Account_Name.name || "";
-
     if (accountData.CT_Return_DD) {
       document.getElementById("financial-year").value = getFinancialYear(accountData.CT_Return_DD);
     }
@@ -107,9 +101,6 @@ function getCTReturnDueDate(taxPeriodCT, financialYearEnding) {
   return dueDate.getFullYear() + "-" + String(dueDate.getMonth() + 1).padStart(2, "0") + "-" + String(dueDate.getDate()).padStart(2, "0");
 }
 
-/**
- * FIXED: Handles both files using binary ArrayBuffer to prevent corruption
- */
 async function handleFileSelection(file, inputId) {
   if (!file) return;
   const zone = document.querySelector(`.drop-zone[data-input-id="${inputId}"]`);
@@ -119,9 +110,8 @@ async function handleFileSelection(file, inputId) {
       const reader = new FileReader();
       reader.onload = () => res(reader.result); 
       reader.onerror = rej;
-      reader.readAsArrayBuffer(file); // Binary fix
+      reader.readAsArrayBuffer(file);
     });
-    
     if (inputId === "corporate-tax-return") {
       cachedFile = file; 
       cachedBase64 = content;
@@ -131,7 +121,6 @@ async function handleFileSelection(file, inputId) {
       cachedBase64Payment = content;
       document.getElementById("payment-text").innerHTML = `<strong>✓ ${file.name}</strong>`;
     }
-
     if(zone) zone.classList.add('file-set');
     setTimeout(hideUploadBuffer, 800);
   } catch (err) { 
@@ -140,9 +129,6 @@ async function handleFileSelection(file, inputId) {
   }
 }
 
-/**
- * FIXED: Uploads both files individually to Zoho
- */
 async function uploadFileToCRM() {
   if (cachedFile && cachedBase64) {
     await ZOHO.CRM.API.attachFile({ 
@@ -164,19 +150,18 @@ async function update_record(event) {
   event.preventDefault();
   clearErrors();
   let hasError = false;
-
+  const rawTax = document.getElementById("tax-paid").value.replace(/,/g, "");
   const data = {
     referenceNo: document.getElementById("reference-number").value.trim(),
     taxablePerson: document.getElementById("name-of-taxable-person").value.trim(),
     taxRegNo: document.getElementById("tax-registration-number").value.trim(),
     taxPeriodCt: document.getElementById("tax-period-ct").value,
     financialYear: document.getElementById("financial-year").value,
-    taxPaid: document.getElementById("tax-paid").value,
+    taxPaid: rawTax,
     subDate: document.getElementById("submission-date").value,
     paymentRef: document.getElementById("payment-reference").value.trim(),
     payGiban: document.getElementById("pay-giban").value.trim()
   };
-
   if (!data.subDate) { showError("submission-date", "Required."); hasError = true; }
   if (!data.referenceNo) { showError("reference-number", "Required."); hasError = true; }
   if (!data.taxablePerson) { showError("name-of-taxable-person", "Required."); hasError = true; }
@@ -185,17 +170,13 @@ async function update_record(event) {
   if (!data.financialYear) { showError("financial-year", "Required."); hasError = true; }
   if (!data.taxPaid) { showError("tax-paid", "Required."); hasError = true; }
   if (!cachedFile) { showError("corporate-tax-return", "File required."); hasError = true; }
-
   if (parseFloat(data.taxPaid) > 0) {
     if (!data.paymentRef) { showError("payment-reference", "Required."); hasError = true; }
     if (!data.payGiban) { showError("pay-giban", "Required."); hasError = true; }
     if (!cachedFilePayment) { showError("payment-instruction", "File required."); hasError = true; }
   }
-
   if (hasError) return;
-
-  showModal("loading", "Uploading...", "Please wait while we process your submission and upload files.");
-
+  showModal("loading", "Uploading...", "Please wait while we process your submission.");
   try {
     const ctReturnDd = getCTReturnDueDate(data.taxPeriodCt, data.financialYear);
     await ZOHO.CRM.API.updateRecord({
@@ -207,23 +188,45 @@ async function update_record(event) {
         Payment_Reference: data.paymentRef, Pay_GIBAN: data.payGiban
       }
     });
-
     const req_data = {
       "arguments": JSON.stringify({
         "account_id": account_id, "tax_period_ct": data.taxPeriodCt, "corporate_tax_trn": data.taxRegNo,
         "ct_return_dd": ctReturnDd, "pay_giban": data.payGiban, "legal_taxable_person": data.taxablePerson
       })
     };
-
     await ZOHO.CRM.FUNCTIONS.execute("ta_ctar_complete_the_process_update_account", req_data);
-    await uploadFileToCRM(); // Uploads both cached files
+    await uploadFileToCRM(); 
     showModal("success", "Submission Successful", "The record has been updated successfully.");
   } catch (error) {
     showModal("error", "Submission Failed", "There was an error updating the record.");
   }
 }
 
-function initializeDragAndDrop() {
+function initializeListeners() {
+  document.getElementById("record-form").addEventListener("submit", update_record);
+  const taxPaidInput = document.getElementById("tax-paid");
+  taxPaidInput.addEventListener("input", (e) => {
+    let cursor = e.target.selectionStart;
+    let oldVal = e.target.value;
+    let cleanValue = oldVal.replace(/[^\d.]/g, '');
+    let parts = cleanValue.split('.');
+    if (parts.length > 2) cleanValue = parts[0] + '.' + parts.slice(1).join('');
+    if (parts[0]) parts[0] = parseInt(parts[0], 10).toLocaleString('en-US');
+    let newVal = parts.join('.');
+    e.target.value = newVal;
+    let diff = newVal.length - oldVal.length;
+    e.target.setSelectionRange(cursor + diff, cursor + diff);
+    document.getElementById("payment-fields").style.display = (parseFloat(newVal.replace(/,/g, "")) || 0) > 0 ? "block" : "none";
+  });
+  taxPaidInput.addEventListener("blur", (e) => {
+    let val = e.target.value.replace(/,/g, "");
+    if (val) {
+      let num = parseFloat(val);
+      if (!isNaN(num)) {
+        e.target.value = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    }
+  });
   document.querySelectorAll('.drop-zone').forEach(zone => {
     const inputId = zone.getAttribute('data-input-id');
     const input = document.getElementById(inputId);
@@ -237,14 +240,6 @@ function initializeDragAndDrop() {
     });
     input.addEventListener('change', (e) => handleFileSelection(e.target.files[0], inputId));
   });
-}
-
-function initializeListeners() {
-  document.getElementById("record-form").addEventListener("submit", update_record);
-  document.getElementById("tax-paid").addEventListener("input", (e) => {
-    document.getElementById("payment-fields").style.display = (parseFloat(e.target.value) || 0) > 0 ? "block" : "none";
-  });
-  initializeDragAndDrop();
   ZOHO.embeddedApp.init();
 }
 initializeListeners();

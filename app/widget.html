@@ -1,131 +1,122 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://live.zwidgets.com/js-sdk/1.2/ZohoEmbededAppSDK.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" type="text/css" href="css/index.css">
-  </head>
-  <body>
+</head>
+<body>
     <div class="form-container">
-      <form id="record-form" novalidate>
-        <div class="form-group">
-          <label>Reference Number <span class="text-red-500">*</span></label>
-          <input type="text" id="reference-number" />
-          <span class="error-message" id="error-reference-number"></span>
-        </div>
+        <form id="record-form" novalidate>
+            <label for="reference-number">Reference Number <span class="req">*</span></label>
+            <input type="text" id="reference-number" name="reference-number"/>
+            <span class="error-message" id="error-reference-number"></span>
 
-        <div class="form-group">
-          <label>Legal Name of Taxable Person <span class="text-red-500">*</span></label>
-          <input type="text" id="name-of-taxable-person" />
-          <span class="error-message" id="error-name-of-taxable-person"></span>
-        </div>
+            <label for="name-of-taxable-person">Legal Name of Taxable Person <span class="req">*</span></label>
+            <input type="text" id="name-of-taxable-person" name="name-of-taxable-person"/>
+            <span class="error-message" id="error-name-of-taxable-person"></span>
 
-        <div class="form-group">
-          <label>Tax Registration Number <span class="text-red-500">*</span></label>
-          <input type="text" id="tax-registration-number" />
-          <span class="error-message" id="error-tax-registration-number"></span>
-        </div>
+            <label for="tax-registration-number">Tax Registration Number <span class="req">*</span></label>
+            <input type="text" id="tax-registration-number" name="tax-registration-number"/>
+            <span class="error-message" id="error-tax-registration-number"></span>
 
-        <div class="form-group">
-          <label>Submission Date <span class="text-red-500">*</span></label>
-          <input type="date" id="submission-date" />
-          <span class="error-message" id="error-submission-date"></span>
-        </div>
-
-        <div class="form-group">
-          <label>Tax Period CT <span class="text-red-500">*</span></label>
-          <select id="tax-period-ct">
-            <option value="" disabled selected>Select ...</option>
-            <option value="January - December">January - December</option>
-            <option value="February - January">February - January</option>
-            <option value="March - February">March - February</option>
-            <option value="April - March">April - March</option>
-            <option value="May - April">May - April</option>
-            <option value="June - May">June - May</option>
-            <option value="July - June">July - June</option>
-            <option value="August - July">August - July</option>
-            <option value="September - August">September - August</option>
-            <option value="October - September">October - September</option>
-            <option value="November - October">November - October</option>
-            <option value="December - November">December - November</option>
-          </select>
-          <span class="error-message" id="error-tax-period-ct"></span>
-        </div>
-
-        <div class="form-group">
-          <label>Financial Year (Ending) <span class="text-red-500">*</span></label>
-          <input type="number" id="financial-year" min="2025" max="2050" />
-          <span class="error-message" id="error-financial-year"></span>
-        </div>
-
-        <div class="form-group">
-          <label>Tax Amount (AED) <span class="text-red-500">*</span></label>
-          <div class="input-group">
-            <span class="currency">AED</span>
-            <input type="number" id="tax-paid" step="0.01" />
-          </div>
-          <span class="error-message" id="error-tax-paid"></span>
-        </div>
-
-        <div id="payment-fields" style="display: none;">
-          <div class="form-group">
-            <label>Payment Reference</label>
-            <input type="text" id="payment-reference" />
-            <span class="error-message" id="error-payment-reference"></span>
-          </div>
-          <div class="form-group">
-            <label>Payment Instruction</label>
-            <div class="drop-zone" data-input-id="payment-instruction">
-              <span id="payment-text">Click or Drop Payment Instruction</span>
-              <input type="file" id="payment-instruction" class="hidden" />
+            <label for="submission-date">Submission Date <span class="req">*</span></label>
+            <div class="date-input-container">
+                <input type="date" id="submission-date" name="submission-date" required />
+                <span class="calendar-icon">📅</span>
             </div>
-            <span class="error-message" id="error-payment-instruction"></span>
-          </div>
-          <div class="form-group">
-            <label>Pay (GIBAN)</label>
-            <input type="text" id="pay-giban" />
-            <span class="error-message" id="error-pay-giban"></span>
-          </div>
-        </div>
+            <span class="error-message" id="error-submission-date"></span>
 
-        <div class="form-group">
-          <label>Corporate Tax Return <span class="text-red-500">*</span></label>
-          <div class="drop-zone" data-input-id="corporate-tax-return">
-            <span id="return-text">Click or Drop Tax Return</span>
-            <input type="file" id="corporate-tax-return" class="hidden" />
-          </div>
-          <span class="error-message" id="error-corporate-tax-return"></span>
-        </div>
+            <label for="tax-period-ct">Tax Period CT <span class="req">*</span></label>
+            <select id="tax-period-ct" name="tax-period-ct">
+                <option value="" disabled selected>Select ...</option>
+                <option value="January - December">January - December</option>
+                <option value="February - January">February - January</option>
+                <option value="March - February">March - February</option>
+                <option value="April - March">April - March</option>
+                <option value="May - April">May - April</option>
+                <option value="June - May">June - May</option>
+                <option value="July - June">July - June</option>
+                <option value="August - July">August - July</option>
+                <option value="September - August">September - August</option>
+                <option value="October - September">October - September</option>
+                <option value="November - October">November - October</option>
+                <option value="December - November">December - November</option>
+            </select>
+            <span class="error-message" id="error-tax-period-ct"></span>
 
-        <button class="submit-button" type="submit" id="submit_button_id">Submit</button>
-      </form>
+            <label for="financial-year">Financial Year (Ending) <span class="req">*</span></label>
+            <input type="number" id="financial-year" name="financial-year" min="2025" max="2050" />
+            <span class="error-message" id="error-financial-year"></span>
+
+            <label for="tax-paid">Corporate Tax Payment Due (AED) <span class="req">*</span></label>
+            <div class="input-group">
+                <span class="currency">AED</span>
+                <input type="text" id="tax-paid" name="tax-paid" placeholder="0.00" />
+            </div>
+            <span class="error-message" id="error-tax-paid"></span>
+
+            <div id="payment-fields" style="display: none;">
+                <label for="payment-reference">Payment Reference <span class="req">*</span></label>
+                <input type="text" id="payment-reference" name="payment-reference"/>
+                <span class="error-message" id="error-payment-reference"></span>
+
+                <label>Payment Instruction <span class="req">*</span></label>
+                <div class="drop-zone" data-input-id="payment-instruction">
+                    <span id="payment-text">Click or Drop Payment Instruction</span>
+                    <input type="file" id="payment-instruction" class="hidden" />
+                </div>
+                <span class="error-message" id="error-payment-instruction"></span>
+
+                <label for="pay-giban">Pay (GIBAN) <span class="req">*</span></label>
+                <input type="text" id="pay-giban" name="pay-giban"/>
+                <span class="error-message" id="error-pay-giban"></span>
+            </div>
+
+            <label>Corporate Tax Return <span class="req">*</span></label>
+            <div class="drop-zone" data-input-id="corporate-tax-return">
+                <span id="return-text">Click or Drop Tax Return</span>
+                <input type="file" id="corporate-tax-return" class="hidden" />
+            </div>
+            <span class="error-message" id="error-corporate-tax-return"></span>
+
+            <button class="submit-button" type="submit" id="submit_button_id">Submit</button>
+        </form>
     </div>
 
-    <div id="custom-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 px-4">
-        <div class="w-full max-w-[280px] rounded-lg bg-white p-6 text-center shadow-xl">
-            <div id="modal-icon-success" class="mx-auto mb-2 text-green-500 hidden text-4xl">✓</div>
-            <div id="modal-icon-error" class="mx-auto mb-2 text-red-500 hidden text-4xl">✕</div>
-            <div id="modal-icon-loading" class="mx-auto mb-4 hidden">
-                <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#4A90E2] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+    <div id="custom-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+        <div class="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div class="p-6 text-center">
+                <div id="modal-icon-success" class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 hidden">
+                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <div id="modal-icon-error" class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 hidden">
+                    <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <div id="modal-icon-loading" class="mx-auto mb-4 hidden">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#4A90E2] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+                </div>
+                <h3 id="modal-title" class="text-lg font-bold text-gray-900"></h3>
+                <p id="modal-message" class="mt-2 text-xs text-gray-500"></p>
+                <div class="mt-6">
+                    <button id="modal-close" class="w-full rounded-xl bg-[#4A90E2] px-6 py-2 text-sm font-bold text-white hover:bg-[#357ABD] uppercase tracking-wider"></button>
+                </div>
             </div>
-            <h3 id="modal-title" class="text-sm font-bold text-gray-800"></h3>
-            <p id="modal-message" class="text-[11px] text-gray-500 mt-1"></p>
-            <button id="modal-close" class="mt-4 w-full rounded bg-[#4A90E2] py-2 text-[11px] font-bold text-white uppercase tracking-wider"></button>
         </div>
     </div>
 
     <div id="upload-buffer" class="upload-overlay hidden">
-      <div class="upload-box">
-        <div class="text-xs font-bold">Processing File...</div>
-        <div class="progress-bar-background">
-          <div id="upload-progress" class="progress-bar-fill animate"></div>
+        <div class="upload-box">
+            <div class="upload-title">Processing...</div>
+            <div class="progress-bar-background">
+                <div id="upload-progress" class="progress-bar-fill animate"></div>
+            </div>
         </div>
-      </div>
     </div>
 
     <button class="close-button" onclick="closeWidget()">×</button>
     <script src="js/app.js"></script>
-  </body>
+</body>
 </html>
